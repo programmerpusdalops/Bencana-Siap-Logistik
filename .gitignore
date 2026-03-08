@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# Build
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+backend/uploads/*.jpg
+backend/uploads/*.png
+backend/uploads/*.jpeg
+!backend/uploads/.gitkeep
+
+# Prisma
+backend/generated/
+
+# Logs
+*.log

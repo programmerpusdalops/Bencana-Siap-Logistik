@@ -1,0 +1,11 @@
+// Prisma Schema for SIAP LOGISTIK BENCANA
+// Tables will be defined in subsequent prompts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
