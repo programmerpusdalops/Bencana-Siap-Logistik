@@ -13,9 +13,8 @@ router.get('/health', (_req, res) => {
     });
 });
 
-// Module routes will be registered here in subsequent prompts
-// Example:
-// const authRoutes = require('../modules/auth/auth.routes');
-// router.use('/auth', authRoutes);
+// ─── Module Routes ──────────────────────────────────────────────────────────────
+const authRoutes = require('../modules/auth/auth.routes');
+router.use('/auth', authRoutes);
 
 module.exports = router;

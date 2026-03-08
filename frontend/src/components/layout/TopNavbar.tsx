@@ -1,5 +1,5 @@
 import { Bell, LogOut, ChevronRight, Menu, User as UserIcon } from 'lucide-react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { notificationsData } from '@/data/dummyData';
 import { useState, useRef, useEffect } from 'react';
@@ -44,7 +44,8 @@ interface Props {
 
 export const TopNavbar = ({ onMenuClick }: Props) => {
   const location = useLocation();
-  const { user, setRole } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const unreadCount = notificationsData.filter(n => !n.read).length;
@@ -59,6 +60,13 @@ export const TopNavbar = ({ onMenuClick }: Props) => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
+  if (!user) return null;
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 md:px-6" style={{ boxShadow: 'var(--shadow-soft)' }}>
@@ -125,24 +133,23 @@ export const TopNavbar = ({ onMenuClick }: Props) => {
             </div>
             <div className="hidden text-left md:block">
               <p className="text-sm font-medium text-foreground leading-tight">{user.name}</p>
-              <p className="text-[10px] text-muted-foreground">{roleLabels[user.role]}</p>
+              <p className="text-[10px] text-muted-foreground">{roleLabels[user.role] || user.role}</p>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Ganti Role (Simulasi)</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              <div>
+                <p className="font-medium">{user.name}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {(Object.keys(roleLabels) as UserRole[]).map(role => (
-              <DropdownMenuItem
-                key={role}
-                onClick={() => setRole(role)}
-                className={user.role === role ? 'bg-primary/10 font-medium' : ''}
-              >
-                <UserIcon className="mr-2 h-4 w-4" />
-                {roleLabels[role]}
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuItem>
+              <UserIcon className="mr-2 h-4 w-4" />
+              {roleLabels[user.role] || user.role}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </DropdownMenuItem>

@@ -2,11 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
 
+const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const DashboardPage = lazy(() => import("./pages/dashboard/DashboardPage"));
 const StokGudangPage = lazy(() => import("./pages/logistik/StokGudangPage"));
 const BarangMasukPage = lazy(() => import("./pages/logistik/BarangMasukPage"));
@@ -22,10 +23,36 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const Loading = () => (
-  <div className="flex h-64 items-center justify-center">
+  <div className="flex h-screen items-center justify-center">
     <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
   </div>
 );
+
+/**
+ * Auth guard component.
+ * If user is not logged in, redirect to /login.
+ */
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return <Loading />;
+  if (!user) return <Navigate to="/login" replace />;
+
+  return <>{children}</>;
+};
+
+/**
+ * Guest-only route (login page).
+ * If user is already logged in, redirect to dashboard.
+ */
+const GuestRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return <Loading />;
+  if (user) return <Navigate to="/" replace />;
+
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -36,7 +63,19 @@ const App = () => (
         <BrowserRouter>
           <Suspense fallback={<Loading />}>
             <Routes>
-              <Route element={<MainLayout />}>
+              {/* Public: Login */}
+              <Route path="/login" element={
+                <GuestRoute>
+                  <LoginPage />
+                </GuestRoute>
+              } />
+
+              {/* Protected: Dashboard & all pages */}
+              <Route element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/stok" element={<StokGudangPage />} />
                 <Route path="/barang-masuk" element={<BarangMasukPage />} />
@@ -48,6 +87,7 @@ const App = () => (
                 <Route path="/laporan" element={<LaporanPage />} />
                 <Route path="/master/:type" element={<MasterDataPage />} />
               </Route>
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

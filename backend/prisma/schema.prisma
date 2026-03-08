@@ -1,5 +1,7 @@
+// ────────────────────────────────────────────────────────────────────────────────
 // Prisma Schema for SIAP LOGISTIK BENCANA
-// Tables will be defined in subsequent prompts
+// Disaster Logistics Management System
+// ────────────────────────────────────────────────────────────────────────────────
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +10,101 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ─── ROLES ──────────────────────────────────────────────────────────────────────
+model Role {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  users User[]
+
+  @@map("roles")
+}
+
+// ─── USERS ──────────────────────────────────────────────────────────────────────
+model User {
+  id          Int       @id @default(autoincrement())
+  name        String
+  email       String    @unique
+  password    String
+  role_id     Int
+  instansi_id Int?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  role     Role      @relation(fields: [role_id], references: [id])
+  instansi Instansi? @relation(fields: [instansi_id], references: [id])
+
+  @@index([email])
+  @@map("users")
+}
+
+// ─── INSTANSI ───────────────────────────────────────────────────────────────────
+model Instansi {
+  id              Int      @id @default(autoincrement())
+  nama_instansi   String
+  jenis_instansi  String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  users  User[]
+  gudang Gudang[]
+
+  @@map("instansi")
+}
+
+// ─── GUDANG ─────────────────────────────────────────────────────────────────────
+model Gudang {
+  id          Int      @id @default(autoincrement())
+  nama_gudang String
+  instansi_id Int
+  alamat      String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  instansi Instansi @relation(fields: [instansi_id], references: [id])
+
+  @@map("gudang")
+}
+
+// ─── JENIS LOGISTIK ─────────────────────────────────────────────────────────────
+model JenisLogistik {
+  id         Int      @id @default(autoincrement())
+  nama_jenis String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  barang_logistik BarangLogistik[]
+
+  @@map("jenis_logistik")
+}
+
+// ─── SATUAN ─────────────────────────────────────────────────────────────────────
+model Satuan {
+  id          Int      @id @default(autoincrement())
+  nama_satuan String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  barang_logistik BarangLogistik[]
+
+  @@map("satuan")
+}
+
+// ─── BARANG LOGISTIK ────────────────────────────────────────────────────────────
+model BarangLogistik {
+  id               Int      @id @default(autoincrement())
+  nama_barang      String
+  jenis_logistik_id Int
+  satuan_id        Int
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  jenis_logistik JenisLogistik @relation(fields: [jenis_logistik_id], references: [id])
+  satuan         Satuan        @relation(fields: [satuan_id], references: [id])
+
+  @@map("barang_logistik")
 }
