@@ -2,7 +2,7 @@ import { useLocation, Link } from 'react-router-dom';
 import {
   LayoutDashboard, Package, PackagePlus, FileText, CheckCircle,
   Truck, ClipboardCheck, Map, BarChart3, Database, X, Shield,
-  ChevronDown
+  ChevronDown, Users
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/types';
@@ -18,6 +18,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/', roles: ['super_admin', 'admin_gudang', 'admin_pusdalops', 'petugas_posko', 'pimpinan'] },
+  { label: 'Manajemen User', icon: Users, path: '/users', roles: ['super_admin'] },
   { label: 'Stok Gudang', icon: Package, path: '/stok', roles: ['super_admin', 'admin_gudang', 'pimpinan'] },
   { label: 'Barang Masuk', icon: PackagePlus, path: '/barang-masuk', roles: ['super_admin', 'admin_gudang'] },
   { label: 'Permintaan Logistik', icon: FileText, path: '/permintaan', roles: ['super_admin', 'admin_pusdalops', 'petugas_posko'] },
@@ -33,6 +34,7 @@ const menuItems: MenuItem[] = [
       { label: 'Barang Logistik', path: '/master/barang-logistik', roles: ['super_admin'] },
       { label: 'Gudang', path: '/master/gudang', roles: ['super_admin'] },
       { label: 'Instansi', path: '/master/instansi', roles: ['super_admin'] },
+      { label: 'Satuan', path: '/master/satuan', roles: ['super_admin'] },
       { label: 'Kendaraan', path: '/master/kendaraan', roles: ['super_admin'] },
     ],
   },
@@ -66,9 +68,8 @@ export const AppSidebar = ({ open, onClose }: Props) => {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform duration-300 lg:static lg:translate-x-0 ${
-        open ? 'translate-x-0' : '-translate-x-full'
-      }`}
+      className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform duration-300 lg:static lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'
+        }`}
     >
       {/* Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
@@ -95,9 +96,8 @@ export const AppSidebar = ({ open, onClose }: Props) => {
                 <li key={item.label}>
                   <button
                     onClick={() => toggleMenu(item.label)}
-                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent ${
-                      isChildActive ? 'bg-sidebar-accent text-sidebar-primary' : 'text-sidebar-foreground'
-                    }`}
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent ${isChildActive ? 'bg-sidebar-accent text-sidebar-primary' : 'text-sidebar-foreground'
+                      }`}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
                     <span className="flex-1 text-left">{item.label}</span>
@@ -110,11 +110,10 @@ export const AppSidebar = ({ open, onClose }: Props) => {
                           <Link
                             to={child.path}
                             onClick={onClose}
-                            className={`block rounded-lg px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent ${
-                              location.pathname === child.path
-                                ? 'bg-sidebar-accent text-sidebar-primary font-medium'
-                                : 'text-sidebar-foreground'
-                            }`}
+                            className={`block rounded-lg px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent ${location.pathname === child.path
+                              ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                              : 'text-sidebar-foreground'
+                              }`}
                           >
                             {child.label}
                           </Link>
@@ -132,11 +131,10 @@ export const AppSidebar = ({ open, onClose }: Props) => {
                 <Link
                   to={item.path!}
                   onClick={onClose}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent ${
-                    isActive
-                      ? 'bg-sidebar-accent text-sidebar-primary font-medium'
-                      : 'text-sidebar-foreground'
-                  }`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent ${isActive
+                    ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                    : 'text-sidebar-foreground'
+                    }`}
                 >
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span>{item.label}</span>

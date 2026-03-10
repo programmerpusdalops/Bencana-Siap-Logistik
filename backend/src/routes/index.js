@@ -15,6 +15,12 @@ router.get('/health', (_req, res) => {
 
 // ─── Module Routes ──────────────────────────────────────────────────────────────
 const authRoutes = require('../modules/auth/auth.routes');
+const usersRoutes = require('../modules/users/users.routes');
+const masterRoutes = require('../modules/master-data/master-data.routes');
+const stocksRoutes = require('../modules/stocks/stocks.routes');
 router.use('/auth', authRoutes);
+router.use('/users', usersRoutes);
+router.use('/master', masterRoutes);
+router.use('/stocks', stocksRoutes);
 
 module.exports = router;

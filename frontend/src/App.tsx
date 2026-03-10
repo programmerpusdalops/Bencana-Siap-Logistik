@@ -18,6 +18,7 @@ const KonfirmasiPage = lazy(() => import("./pages/distribusi/KonfirmasiPage"));
 const MonitoringPage = lazy(() => import("./pages/monitoring/MonitoringPage"));
 const LaporanPage = lazy(() => import("./pages/laporan/LaporanPage"));
 const MasterDataPage = lazy(() => import("./pages/master/MasterDataPage"));
+const UserManagementPage = lazy(() => import("./pages/users/UserManagementPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -86,6 +87,7 @@ const App = () => (
                 <Route path="/monitoring" element={<MonitoringPage />} />
                 <Route path="/laporan" element={<LaporanPage />} />
                 <Route path="/master/:type" element={<MasterDataPage />} />
+                <Route path="/users" element={<UserManagementPage />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

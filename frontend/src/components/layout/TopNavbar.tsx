@@ -23,6 +23,7 @@ const roleLabels: Record<UserRole, string> = {
 
 const breadcrumbMap: Record<string, string> = {
   '/': 'Dashboard',
+  '/users': 'Manajemen User',
   '/stok': 'Stok Gudang',
   '/barang-masuk': 'Barang Masuk',
   '/permintaan': 'Permintaan Logistik',
@@ -35,6 +36,7 @@ const breadcrumbMap: Record<string, string> = {
   '/master/barang-logistik': 'Barang Logistik',
   '/master/gudang': 'Gudang',
   '/master/instansi': 'Instansi',
+  '/master/satuan': 'Satuan',
   '/master/kendaraan': 'Kendaraan',
 };
 

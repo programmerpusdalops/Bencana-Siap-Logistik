@@ -67,6 +67,8 @@ model Gudang {
 
   instansi Instansi @relation(fields: [instansi_id], references: [id])
 
+  stok_logistik StokLogistik[]
+
   @@map("gudang")
 }
 
@@ -106,5 +108,38 @@ model BarangLogistik {
   jenis_logistik JenisLogistik @relation(fields: [jenis_logistik_id], references: [id])
   satuan         Satuan        @relation(fields: [satuan_id], references: [id])
 
+  stok_logistik StokLogistik[]
+
   @@map("barang_logistik")
+}
+
+// ─── STOK LOGISTIK ──────────────────────────────────────────────────────────────
+model StokLogistik {
+  id           Int       @id @default(autoincrement())
+  barang_id    Int
+  gudang_id    Int
+  jumlah       Int       @default(0)
+  expired_date DateTime?
+  kondisi      String    @default("baik")
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  barang BarangLogistik @relation(fields: [barang_id], references: [id])
+  gudang Gudang         @relation(fields: [gudang_id], references: [id])
+
+  @@index([barang_id])
+  @@index([gudang_id])
+  @@map("stok_logistik")
+}
+
+// ─── KENDARAAN ──────────────────────────────────────────────────────────────────
+model Kendaraan {
+  id              Int      @id @default(autoincrement())
+  nama_kendaraan  String
+  nomor_polisi    String
+  kapasitas       String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@map("kendaraan")
 }
