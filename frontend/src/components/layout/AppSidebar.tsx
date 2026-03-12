@@ -2,7 +2,7 @@ import { useLocation, Link } from 'react-router-dom';
 import {
   LayoutDashboard, Package, PackagePlus, FileText, CheckCircle,
   Truck, ClipboardCheck, Map, BarChart3, Database, X, Shield,
-  ChevronDown, Users
+  ChevronDown, Users, Flame
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/types';
@@ -18,6 +18,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/', roles: ['super_admin', 'admin_gudang', 'admin_pusdalops', 'petugas_posko', 'pimpinan'] },
+  { label: 'Data Bencana', icon: Flame, path: '/bencana', roles: ['super_admin', 'admin_pusdalops'] },
   { label: 'Manajemen User', icon: Users, path: '/users', roles: ['super_admin'] },
   { label: 'Stok Gudang', icon: Package, path: '/stok', roles: ['super_admin', 'admin_gudang', 'pimpinan'] },
   { label: 'Barang Masuk', icon: PackagePlus, path: '/barang-masuk', roles: ['super_admin', 'admin_gudang'] },

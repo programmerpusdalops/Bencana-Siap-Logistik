@@ -11,6 +11,7 @@ const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const DashboardPage = lazy(() => import("./pages/dashboard/DashboardPage"));
 const StokGudangPage = lazy(() => import("./pages/logistik/StokGudangPage"));
 const BarangMasukPage = lazy(() => import("./pages/logistik/BarangMasukPage"));
+const BencanaPage = lazy(() => import("./pages/bencana/BencanaPage"));
 const PermintaanPage = lazy(() => import("./pages/permintaan/PermintaanPage"));
 const VerifikasiPage = lazy(() => import("./pages/permintaan/VerifikasiPage"));
 const DistribusiPage = lazy(() => import("./pages/distribusi/DistribusiPage"));
@@ -82,6 +83,7 @@ const App = () => (
               <Route path="/" element={<DashboardPage />} />
               <Route path="/stok" element={<StokGudangPage />} />
               <Route path="/barang-masuk" element={<BarangMasukPage />} />
+              <Route path="/bencana" element={<BencanaPage />} />
               <Route path="/permintaan" element={<PermintaanPage />} />
               <Route path="/verifikasi" element={<VerifikasiPage />} />
               <Route path="/distribusi" element={<DistribusiPage />} />
