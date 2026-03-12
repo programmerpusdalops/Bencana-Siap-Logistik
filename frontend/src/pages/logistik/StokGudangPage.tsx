@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { getAuthHeaders } from '@/services/api';
+import { fetchWithAuth, getAuthHeaders } from '@/services/api';
 import { Package, Plus, Search, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 
 const PAGE_SIZE = 10;
@@ -34,6 +34,7 @@ const StokGudangPage = () => {
   const [search, setSearch] = useState('');
   const [filterJenis, setFilterJenis] = useState('all');
   const [filterKondisi, setFilterKondisi] = useState('all');
+  const [filterGudang, setFilterGudang] = useState('all');
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState('namaBarang');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -54,7 +55,7 @@ const StokGudangPage = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/stocks', { headers: getAuthHeaders() });
+      const res = await fetchWithAuth('/api/stocks', { headers: getAuthHeaders() });
       const json = await res.json();
       if (json.success) setData(json.data);
     } catch (err) {
@@ -68,8 +69,8 @@ const StokGudangPage = () => {
   const fetchOptions = useCallback(async () => {
     try {
       const [barangRes, gudangRes] = await Promise.all([
-        fetch('/api/master/barang', { headers: getAuthHeaders() }),
-        fetch('/api/master/gudang', { headers: getAuthHeaders() }),
+        fetchWithAuth('/api/master/barang', { headers: getAuthHeaders() }),
+        fetchWithAuth('/api/master/gudang', { headers: getAuthHeaders() }),
       ]);
       const barangJson = await barangRes.json();
       const gudangJson = await gudangRes.json();
@@ -108,6 +109,9 @@ const StokGudangPage = () => {
     if (filterKondisi !== 'all') {
       result = result.filter(d => d.kondisi === filterKondisi);
     }
+    if (filterGudang !== 'all') {
+      result = result.filter(d => String(d.gudang_id) === filterGudang);
+    }
 
     result.sort((a, b) => {
       let av: any, bv: any;
@@ -124,7 +128,7 @@ const StokGudangPage = () => {
     });
 
     return result;
-  }, [data, search, filterJenis, filterKondisi, sortKey, sortDir]);
+  }, [data, search, filterJenis, filterKondisi, filterGudang, sortKey, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -169,7 +173,7 @@ const StokGudangPage = () => {
     try {
       const url = editing ? `/api/stocks/${editing.id}` : '/api/stocks';
       const method = editing ? 'PUT' : 'POST';
-      const res = await fetch(url, {
+      const res = await fetchWithAuth(url, {
         method,
         headers: getAuthHeaders(),
         body: JSON.stringify(formData),
@@ -191,7 +195,7 @@ const StokGudangPage = () => {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`/api/stocks/${deleteTarget.id}`, {
+      const res = await fetchWithAuth(`/api/stocks/${deleteTarget.id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
@@ -251,6 +255,10 @@ const StokGudangPage = () => {
           <select value={filterJenis} onChange={(e) => { setFilterJenis(e.target.value); setPage(1); }} className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary/50 sm:w-40">
             <option value="all">Semua Jenis</option>
             {jenisList.map(j => <option key={j} value={j}>{j}</option>)}
+          </select>
+          <select value={filterGudang} onChange={(e) => { setFilterGudang(e.target.value); setPage(1); }} className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary/50 sm:w-40">
+            <option value="all">Semua Gudang</option>
+            {gudangOptions.map(g => <option key={g.id} value={String(g.id)}>{g.nama_gudang}</option>)}
           </select>
           <select value={filterKondisi} onChange={(e) => { setFilterKondisi(e.target.value); setPage(1); }} className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary/50 sm:w-40">
             <option value="all">Semua Kondisi</option>

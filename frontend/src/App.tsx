@@ -62,37 +62,42 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Suspense fallback={<Loading />}>
-            <Routes>
-              {/* Public: Login */}
-              <Route path="/login" element={
-                <GuestRoute>
+          <Routes>
+            {/* Public: Login */}
+            <Route path="/login" element={
+              <GuestRoute>
+                <Suspense fallback={<Loading />}>
                   <LoginPage />
-                </GuestRoute>
-              } />
+                </Suspense>
+              </GuestRoute>
+            } />
 
-              {/* Protected: Dashboard & all pages */}
-              <Route element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/stok" element={<StokGudangPage />} />
-                <Route path="/barang-masuk" element={<BarangMasukPage />} />
-                <Route path="/permintaan" element={<PermintaanPage />} />
-                <Route path="/verifikasi" element={<VerifikasiPage />} />
-                <Route path="/distribusi" element={<DistribusiPage />} />
-                <Route path="/konfirmasi" element={<KonfirmasiPage />} />
-                <Route path="/monitoring" element={<MonitoringPage />} />
-                <Route path="/laporan" element={<LaporanPage />} />
-                <Route path="/master/:type" element={<MasterDataPage />} />
-                <Route path="/users" element={<UserManagementPage />} />
-              </Route>
+            {/* Protected: Dashboard & all pages */}
+            {/* Suspense is handled inside MainLayout for smooth navigation */}
+            <Route element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/stok" element={<StokGudangPage />} />
+              <Route path="/barang-masuk" element={<BarangMasukPage />} />
+              <Route path="/permintaan" element={<PermintaanPage />} />
+              <Route path="/verifikasi" element={<VerifikasiPage />} />
+              <Route path="/distribusi" element={<DistribusiPage />} />
+              <Route path="/konfirmasi" element={<KonfirmasiPage />} />
+              <Route path="/monitoring" element={<MonitoringPage />} />
+              <Route path="/laporan" element={<LaporanPage />} />
+              <Route path="/master/:type" element={<MasterDataPage />} />
+              <Route path="/users" element={<UserManagementPage />} />
+            </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+            <Route path="*" element={
+              <Suspense fallback={<Loading />}>
+                <NotFound />
+              </Suspense>
+            } />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

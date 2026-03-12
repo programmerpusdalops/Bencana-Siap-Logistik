@@ -71,8 +71,55 @@ async function main() {
         },
     });
     console.log('✅ Super Admin user seeded');
-    console.log('   Email    : admin@bpbd.go.id');
-    console.log('   Password : admin123');
+
+    // ─── Seed Additional Users ──────────────────────────────────────────────────
+    const additionalUsers = [
+        {
+            name: 'Admin Gudang',
+            email: 'gudang@gmail.go.id',
+            password: 'gudang123',
+            roleName: 'admin_gudang',
+        },
+        {
+            name: 'Admin Pusdalops',
+            email: 'dalops@gmail.go.id',
+            password: 'dalops123',
+            roleName: 'admin_pusdalops',
+        },
+        {
+            name: 'Petugas Posko',
+            email: 'posko@gmail.go.id',
+            password: 'posko123',
+            roleName: 'petugas_posko',
+        },
+        {
+            name: 'Pimpinan',
+            email: 'pimpinan@gmail.go.id',
+            password: 'pimpinan123',
+            roleName: 'pimpinan',
+        },
+    ];
+
+    for (const u of additionalUsers) {
+        const role = await prisma.role.findUnique({
+            where: { name: u.roleName },
+        });
+
+        const hashed = await bcrypt.hash(u.password, 10);
+
+        await prisma.user.upsert({
+            where: { email: u.email },
+            update: {},
+            create: {
+                name: u.name,
+                email: u.email,
+                password: hashed,
+                role_id: role.id,
+                instansi_id: defaultInstansi.id,
+            },
+        });
+        console.log(`✅ User seeded: ${u.name} (${u.email})`);
+    }
 
     // ─── Seed Satuan ────────────────────────────────────────────────────────────
     const satuanList = ['Kg', 'Pcs', 'Liter', 'Box', 'Karung', 'Paket'];
@@ -165,6 +212,187 @@ async function main() {
     }
     console.log('✅ Stok Logistik seeded');
 
+    // ─── Seed Barang Masuk ──────────────────────────────────────────────────────
+    const barangMasukList = [
+        {
+            id: 1,
+            tanggal_masuk: new Date('2026-01-15'),
+            barang_id: 1,
+            jumlah: 200,
+            gudang_id: 1,
+            sumber_logistik: 'Donasi',
+            supplier: 'PT Sumber Pangan',
+            catatan: 'Donasi dari perusahaan',
+        },
+        {
+            id: 2,
+            tanggal_masuk: new Date('2026-01-20'),
+            barang_id: 3,
+            jumlah: 500,
+            gudang_id: 2,
+            sumber_logistik: 'Pembelian',
+            supplier: 'CV Aqua Sejahtera',
+            catatan: 'Pengadaan rutin',
+        },
+        {
+            id: 3,
+            tanggal_masuk: new Date('2026-02-05'),
+            barang_id: 4,
+            jumlah: 100,
+            gudang_id: 3,
+            sumber_logistik: 'Bantuan Pemerintah',
+            supplier: 'Kemensos RI',
+            catatan: 'Bantuan dari pusat',
+        },
+    ];
+    for (const bm of barangMasukList) {
+        await prisma.barangMasuk.upsert({
+            where: { id: bm.id },
+            update: {},
+            create: bm,
+        });
+    }
+    console.log('✅ Barang Masuk seeded');
+
+    // ─── Seed Bencana ───────────────────────────────────────────────────────────
+    const bencanaList = [
+        { id: 1, jenis_bencana: 'Gempa Bumi', lokasi: 'Palu', latitude: -0.8917, longitude: 119.8707, tanggal: new Date('2026-01-10'), jumlah_pengungsi: 350, jumlah_korban: 15, status: 'Tanggap Darurat' },
+        { id: 2, jenis_bencana: 'Banjir', lokasi: 'Donggala', latitude: -0.6714, longitude: 119.7414, tanggal: new Date('2026-01-25'), jumlah_pengungsi: 120, jumlah_korban: 5, status: 'Tanggap Darurat' },
+        { id: 3, jenis_bencana: 'Tanah Longsor', lokasi: 'Sigi', latitude: -1.3211, longitude: 119.9703, tanggal: new Date('2026-02-12'), jumlah_pengungsi: 200, jumlah_korban: 8, status: 'Pemulihan' },
+        { id: 4, jenis_bencana: 'Banjir', lokasi: 'Parigi Moutong', latitude: -0.3769, longitude: 120.1787, tanggal: new Date('2026-03-01'), jumlah_pengungsi: 80, jumlah_korban: 3, status: 'Tanggap Darurat' },
+        { id: 5, jenis_bencana: 'Gempa Bumi', lokasi: 'Banggai', latitude: -1.5795, longitude: 122.7894, tanggal: new Date('2026-02-20'), jumlah_pengungsi: 45, jumlah_korban: 2, status: 'Pemulihan' },
+    ];
+    for (const b of bencanaList) {
+        await prisma.bencana.upsert({
+            where: { id: b.id },
+            update: {},
+            create: b,
+        });
+    }
+    console.log('✅ Bencana seeded');
+
+    // ─── Seed Permintaan Logistik ───────────────────────────────────────────────
+    // Get pemohon user (petugas_posko)
+    const pemohon = await prisma.user.findFirst({ where: { email: 'posko@gmail.go.id' } });
+    const pemohonId = pemohon ? pemohon.id : 1;
+
+    const permintaanList = [
+        {
+            id: 1,
+            bencana_id: 1,
+            pemohon_id: pemohonId,
+            status: 'approved',
+            tanggal: new Date('2026-01-10'),
+        },
+        {
+            id: 2,
+            bencana_id: 2,
+            pemohon_id: pemohonId,
+            status: 'pending',
+            tanggal: new Date('2026-01-25'),
+        },
+        {
+            id: 3,
+            bencana_id: 3,
+            pemohon_id: pemohonId,
+            status: 'rejected',
+            tanggal: new Date('2026-02-12'),
+        },
+        {
+            id: 4,
+            bencana_id: 4,
+            pemohon_id: pemohonId,
+            status: 'pending',
+            tanggal: new Date('2026-03-01'),
+        },
+    ];
+
+    for (const p of permintaanList) {
+        await prisma.permintaanLogistik.upsert({
+            where: { id: p.id },
+            update: {},
+            create: p,
+        });
+    }
+
+    // Seed permintaan detail
+    const permintaanDetailList = [
+        { id: 1, permintaan_id: 1, barang_id: 1, jumlah: 100 },
+        { id: 2, permintaan_id: 1, barang_id: 3, jumlah: 200 },
+        { id: 3, permintaan_id: 2, barang_id: 4, jumlah: 50 },
+        { id: 4, permintaan_id: 2, barang_id: 7, jumlah: 5 },
+        { id: 5, permintaan_id: 3, barang_id: 5, jumlah: 30 },
+        { id: 6, permintaan_id: 3, barang_id: 6, jumlah: 500 },
+        { id: 7, permintaan_id: 4, barang_id: 1, jumlah: 50 },
+        { id: 8, permintaan_id: 4, barang_id: 2, jumlah: 100 },
+    ];
+
+    for (const pd of permintaanDetailList) {
+        await prisma.permintaanDetail.upsert({
+            where: { id: pd.id },
+            update: {},
+            create: pd,
+        });
+    }
+    console.log('✅ Permintaan Logistik seeded');
+
+    // ─── Seed Distribusi ────────────────────────────────────────────────────────
+    const adminUser = await prisma.user.findFirst({ where: { email: 'admin@bpbd.go.id' } });
+    const petugasId = adminUser ? adminUser.id : 1;
+
+    const distribusiList = [
+        {
+            id: 1,
+            permintaan_id: 1,
+            gudang_id: 1,
+            tanggal_kirim: new Date('2026-01-12'),
+            kendaraan_id: 1,
+            petugas_id: petugasId,
+            status: 'delivered',
+        },
+    ];
+    for (const d of distribusiList) {
+        await prisma.distribusi.upsert({
+            where: { id: d.id },
+            update: {},
+            create: d,
+        });
+    }
+
+    const distribusiDetailList = [
+        { id: 1, distribusi_id: 1, barang_id: 1, jumlah: 100 },
+        { id: 2, distribusi_id: 1, barang_id: 3, jumlah: 200 },
+    ];
+    for (const dd of distribusiDetailList) {
+        await prisma.distribusiDetail.upsert({
+            where: { id: dd.id },
+            update: {},
+            create: dd,
+        });
+    }
+    console.log('✅ Distribusi seeded');
+
+    // ─── Seed Penerimaan Logistik (dengan koordinat GPS) ────────────────────────
+    const penerimaanList = [
+        {
+            id: 1,
+            distribusi_id: 1,
+            petugas_posko: 'Petugas Posko',
+            catatan: 'Logistik diterima dalam kondisi baik, semua item sesuai manifest.',
+            dokumentasi: null,
+            latitude: -0.8917,
+            longitude: 119.8707,
+        },
+    ];
+    for (const p of penerimaanList) {
+        await prisma.penerimaanLogistik.upsert({
+            where: { id: p.id },
+            update: {},
+            create: p,
+        });
+    }
+    console.log('✅ Penerimaan Logistik seeded');
+
     // ─── Reset auto-increment sequences ──────────────────────────────────────────
     const sequences = [
         { table: 'roles', col: 'id' },
@@ -175,6 +403,13 @@ async function main() {
         { table: 'gudang', col: 'id' },
         { table: 'kendaraan', col: 'id' },
         { table: 'stok_logistik', col: 'id' },
+        { table: 'barang_masuk', col: 'id' },
+        { table: 'bencana', col: 'id' },
+        { table: 'permintaan_logistik', col: 'id' },
+        { table: 'permintaan_detail', col: 'id' },
+        { table: 'distribusi', col: 'id' },
+        { table: 'distribusi_detail', col: 'id' },
+        { table: 'penerimaan_logistik', col: 'id' },
     ];
     for (const s of sequences) {
         await prisma.$executeRawUnsafe(
@@ -194,3 +429,4 @@ main()
     .finally(async () => {
         await prisma.$disconnect();
     });
+

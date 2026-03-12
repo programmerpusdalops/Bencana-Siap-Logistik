@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { getAuthHeaders } from '@/services/api';
+import { fetchWithAuth, getAuthHeaders } from '@/services/api';
 import { Plus, Pencil, Trash2, Search, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface UserRow {
@@ -57,7 +57,7 @@ const UserManagementPage = () => {
     const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/users?page=${page}&limit=10&search=${search}`, {
+            const res = await fetchWithAuth(`/api/users?page=${page}&limit=10&search=${search}`, {
                 headers: getAuthHeaders(),
             });
             const data = await res.json();
@@ -74,7 +74,7 @@ const UserManagementPage = () => {
 
     const fetchRoles = useCallback(async () => {
         try {
-            const res = await fetch('/api/users/roles', { headers: getAuthHeaders() });
+            const res = await fetchWithAuth('/api/users/roles', { headers: getAuthHeaders() });
             const data = await res.json();
             if (data.success) setRoles(data.data);
         } catch { /* ignore */ }
@@ -82,7 +82,7 @@ const UserManagementPage = () => {
 
     const fetchInstansi = useCallback(async () => {
         try {
-            const res = await fetch('/api/users/instansi', { headers: getAuthHeaders() });
+            const res = await fetchWithAuth('/api/users/instansi', { headers: getAuthHeaders() });
             const data = await res.json();
             if (data.success) setInstansiList(data.data);
         } catch { /* ignore */ }
@@ -127,7 +127,7 @@ const UserManagementPage = () => {
             if (formData.password) body.password = formData.password;
             if (formData.instansi_id) body.instansi_id = parseInt(formData.instansi_id);
 
-            const res = await fetch(url, {
+            const res = await fetchWithAuth(url, {
                 method,
                 headers: getAuthHeaders(),
                 body: JSON.stringify(body),
@@ -151,7 +151,7 @@ const UserManagementPage = () => {
     const handleDelete = async () => {
         if (!deleteTarget) return;
         try {
-            const res = await fetch(`/api/users/${deleteTarget.id}`, {
+            const res = await fetchWithAuth(`/api/users/${deleteTarget.id}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders(),
             });

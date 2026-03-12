@@ -1,7 +1,7 @@
 import { Bell, LogOut, ChevronRight, Menu, User as UserIcon } from 'lucide-react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { notificationsData } from '@/data/dummyData';
+
 import { useState, useRef, useEffect } from 'react';
 import type { UserRole } from '@/types';
 import {
@@ -50,7 +50,8 @@ export const TopNavbar = ({ onMenuClick }: Props) => {
   const { user, logout } = useAuth();
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
-  const unreadCount = notificationsData.filter(n => !n.read).length;
+  const notifications: { id: number; title: string; message: string; time: string; read: boolean; type: 'info' | 'warning' | 'success' | 'error' }[] = [];
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const currentPage = breadcrumbMap[location.pathname] || 'Halaman';
   const isMaster = location.pathname.startsWith('/master');
@@ -112,7 +113,7 @@ export const TopNavbar = ({ onMenuClick }: Props) => {
                 <h3 className="text-sm font-semibold text-foreground">Notifikasi</h3>
               </div>
               <div className="max-h-64 overflow-y-auto">
-                {notificationsData.map(n => (
+                {notifications.length > 0 ? notifications.map(n => (
                   <div key={n.id} className={`flex gap-3 px-4 py-3 border-b border-border last:border-0 ${!n.read ? 'bg-primary/5' : ''}`}>
                     <div className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${n.type === 'warning' ? 'bg-warning' : n.type === 'error' ? 'bg-destructive' : n.type === 'success' ? 'bg-success' : 'bg-primary'}`} />
                     <div className="min-w-0">
@@ -121,7 +122,9 @@ export const TopNavbar = ({ onMenuClick }: Props) => {
                       <p className="text-[10px] text-muted-foreground mt-1">{n.time}</p>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="px-4 py-6 text-center text-xs text-muted-foreground">Tidak ada notifikasi</div>
+                )}
               </div>
             </div>
           )}

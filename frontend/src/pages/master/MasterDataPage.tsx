@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
-import { getAuthHeaders } from '@/services/api';
+import { fetchWithAuth, getAuthHeaders } from '@/services/api';
 import { Plus, Pencil, Trash2, Search, Database } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -140,7 +140,7 @@ const MasterDataPage = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(config.apiPath, { headers: getAuthHeaders() });
+      const res = await fetchWithAuth(config.apiPath, { headers: getAuthHeaders() });
       const json = await res.json();
       if (json.success) {
         setData(json.data);
@@ -157,8 +157,8 @@ const MasterDataPage = () => {
     try {
       if (type === 'barang-logistik') {
         const [jenisRes, satuanRes] = await Promise.all([
-          fetch('/api/master/jenis-logistik', { headers: getAuthHeaders() }),
-          fetch('/api/master/satuan', { headers: getAuthHeaders() }),
+          fetchWithAuth('/api/master/jenis-logistik', { headers: getAuthHeaders() }),
+          fetchWithAuth('/api/master/satuan', { headers: getAuthHeaders() }),
         ]);
         const jenisJson = await jenisRes.json();
         const satuanJson = await satuanRes.json();
@@ -166,7 +166,7 @@ const MasterDataPage = () => {
         if (satuanJson.success) setSatuanOptions(satuanJson.data);
       }
       if (type === 'gudang') {
-        const instansiRes = await fetch('/api/master/instansi', { headers: getAuthHeaders() });
+        const instansiRes = await fetchWithAuth('/api/master/instansi', { headers: getAuthHeaders() });
         const instansiJson = await instansiRes.json();
         if (instansiJson.success) setInstansiOptions(instansiJson.data);
       }
@@ -241,7 +241,7 @@ const MasterDataPage = () => {
       const url = editing ? `${config.apiPath}/${editing.id}` : config.apiPath;
       const method = editing ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await fetchWithAuth(url, {
         method,
         headers: getAuthHeaders(),
         body: JSON.stringify(formData),
@@ -266,7 +266,7 @@ const MasterDataPage = () => {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`${config.apiPath}/${deleteTarget.id}`, {
+      const res = await fetchWithAuth(`${config.apiPath}/${deleteTarget.id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });

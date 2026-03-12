@@ -17,50 +17,52 @@ const {
     kendaraanController,
 } = require('./master-data.controller');
 
-// All routes require authentication + super_admin role
+// ─── Authentication ─────────────────────────────────────────────────────────────
 router.use(authenticate);
-router.use(requireRole('super_admin'));
+
+// Helper middleware for write operations
+const requireSuperAdmin = requireRole('super_admin');
 
 // ─── Jenis Logistik ─────────────────────────────────────────────────────────────
 router.get('/jenis-logistik', jenisLogistikController.getAll);
-router.post('/jenis-logistik', jenisLogistikController.create);
+router.post('/jenis-logistik', requireSuperAdmin, jenisLogistikController.create);
 router.get('/jenis-logistik/:id', jenisLogistikController.getById);
-router.put('/jenis-logistik/:id', jenisLogistikController.update);
-router.delete('/jenis-logistik/:id', jenisLogistikController.delete);
+router.put('/jenis-logistik/:id', requireSuperAdmin, jenisLogistikController.update);
+router.delete('/jenis-logistik/:id', requireSuperAdmin, jenisLogistikController.delete);
 
 // ─── Barang Logistik ────────────────────────────────────────────────────────────
 router.get('/barang', barangLogistikController.getAll);
-router.post('/barang', barangLogistikController.create);
+router.post('/barang', requireSuperAdmin, barangLogistikController.create);
 router.get('/barang/:id', barangLogistikController.getById);
-router.put('/barang/:id', barangLogistikController.update);
-router.delete('/barang/:id', barangLogistikController.delete);
+router.put('/barang/:id', requireSuperAdmin, barangLogistikController.update);
+router.delete('/barang/:id', requireSuperAdmin, barangLogistikController.delete);
 
 // ─── Gudang ─────────────────────────────────────────────────────────────────────
 router.get('/gudang', gudangController.getAll);
-router.post('/gudang', gudangController.create);
+router.post('/gudang', requireSuperAdmin, gudangController.create);
 router.get('/gudang/:id', gudangController.getById);
-router.put('/gudang/:id', gudangController.update);
-router.delete('/gudang/:id', gudangController.delete);
+router.put('/gudang/:id', requireSuperAdmin, gudangController.update);
+router.delete('/gudang/:id', requireSuperAdmin, gudangController.delete);
 
 // ─── Instansi ───────────────────────────────────────────────────────────────────
 router.get('/instansi', instansiController.getAll);
-router.post('/instansi', instansiController.create);
+router.post('/instansi', requireSuperAdmin, instansiController.create);
 router.get('/instansi/:id', instansiController.getById);
-router.put('/instansi/:id', instansiController.update);
-router.delete('/instansi/:id', instansiController.delete);
+router.put('/instansi/:id', requireSuperAdmin, instansiController.update);
+router.delete('/instansi/:id', requireSuperAdmin, instansiController.delete);
 
 // ─── Satuan ─────────────────────────────────────────────────────────────────────
 router.get('/satuan', satuanController.getAll);
-router.post('/satuan', satuanController.create);
+router.post('/satuan', requireSuperAdmin, satuanController.create);
 router.get('/satuan/:id', satuanController.getById);
-router.put('/satuan/:id', satuanController.update);
-router.delete('/satuan/:id', satuanController.delete);
+router.put('/satuan/:id', requireSuperAdmin, satuanController.update);
+router.delete('/satuan/:id', requireSuperAdmin, satuanController.delete);
 
 // ─── Kendaraan ──────────────────────────────────────────────────────────────────
 router.get('/kendaraan', kendaraanController.getAll);
-router.post('/kendaraan', kendaraanController.create);
+router.post('/kendaraan', requireSuperAdmin, kendaraanController.create);
 router.get('/kendaraan/:id', kendaraanController.getById);
-router.put('/kendaraan/:id', kendaraanController.update);
-router.delete('/kendaraan/:id', kendaraanController.delete);
+router.put('/kendaraan/:id', requireSuperAdmin, kendaraanController.update);
+router.delete('/kendaraan/:id', requireSuperAdmin, kendaraanController.delete);
 
 module.exports = router;

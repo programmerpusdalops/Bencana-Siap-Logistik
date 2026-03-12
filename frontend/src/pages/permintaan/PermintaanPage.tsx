@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,21 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
-import { permintaanData } from '@/data/dummyData';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-
-// BACKEND API REQUIRED
-// POST /api/permintaan - PermintaanLogistik => PermintaanLogistik
-// GET  /api/permintaan => PermintaanLogistik[]
+import { getPermintaan, createPermintaan, getBencana, fetchWithAuth, getAuthHeaders } from '@/services/api';
 
 const schema = z.object({
-  lokasiBencana: z.string().min(1, 'Lokasi wajib diisi'),
-  jenisBencana: z.string().min(1, 'Jenis bencana wajib dipilih'),
-  tanggalKejadian: z.string().min(1, 'Tanggal wajib diisi'),
-  jumlahKorban: z.coerce.number().min(0, 'Tidak boleh negatif'),
-  jumlahPengungsi: z.coerce.number().min(0, 'Tidak boleh negatif'),
+  bencana_id: z.string().min(1, 'Bencana wajib dipilih'),
   items: z.array(z.object({
-    barang: z.string().min(1, 'Barang wajib diisi'),
+    barang_id: z.string().min(1, 'Barang wajib dipilih'),
     jumlah: z.coerce.number().min(1, 'Minimal 1'),
   })).min(1, 'Minimal 1 item'),
 });
@@ -32,18 +24,50 @@ type FormData = z.infer<typeof schema>;
 
 const PermintaanPage = () => {
   const [showForm, setShowForm] = useState(false);
+  const [data, setData] = useState<any[]>([]);
+  const [bencanaList, setBencanaList] = useState<any[]>([]);
+  const [barangOptions, setBarangOptions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const { register, handleSubmit, control, formState: { errors }, reset, setValue } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { items: [{ barang: '', jumlah: 0 }] },
+    defaultValues: { items: [{ barang_id: '', jumlah: 0 }] },
   });
-
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
 
-  const onSubmit = (data: FormData) => {
-    console.log('Submit permintaan:', data);
-    toast.success('Permintaan logistik berhasil dikirim!');
-    reset();
-    setShowForm(false);
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [permintaanData, bData, barangRes] = await Promise.all([
+        getPermintaan(),
+        getBencana(),
+        fetchWithAuth('/api/master/barang', { headers: getAuthHeaders() }).then(r => r.json()),
+      ]);
+      setData(permintaanData);
+      setBencanaList(bData);
+      if (barangRes.success) setBarangOptions(barangRes.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const onSubmit = async (formData: FormData) => {
+    try {
+      await createPermintaan({
+        bencana_id: parseInt(formData.bencana_id),
+        items: formData.items.map(i => ({ barang_id: parseInt(i.barang_id), jumlah: i.jumlah })),
+      });
+      toast.success('Permintaan logistik berhasil dikirim!');
+      reset();
+      setShowForm(false);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal membuat permintaan');
+    }
   };
 
   return (
@@ -62,38 +86,20 @@ const PermintaanPage = () => {
         <div className="card-dashboard animate-fade-in">
           <h3 className="mb-4 text-sm font-semibold text-foreground">Form Permintaan Logistik</h3>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <Label>Lokasi Bencana *</Label>
-                <Input {...register('lokasiBencana')} placeholder="Nama lokasi" />
-                {errors.lokasiBencana && <p className="mt-1 text-xs text-destructive">{errors.lokasiBencana.message}</p>}
-              </div>
-              <div>
-                <Label>Jenis Bencana *</Label>
-                <Select onValueChange={v => setValue('jenisBencana', v)}>
-                  <SelectTrigger><SelectValue placeholder="Pilih jenis" /></SelectTrigger>
+                <Label>Bencana *</Label>
+                <Select onValueChange={v => setValue('bencana_id', v)}>
+                  <SelectTrigger><SelectValue placeholder="Pilih bencana" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Gempa Bumi">Gempa Bumi</SelectItem>
-                    <SelectItem value="Banjir">Banjir</SelectItem>
-                    <SelectItem value="Tanah Longsor">Tanah Longsor</SelectItem>
-                    <SelectItem value="Kebakaran">Kebakaran</SelectItem>
-                    <SelectItem value="Tsunami">Tsunami</SelectItem>
+                    {bencanaList.map((b: any) => (
+                      <SelectItem key={b.id} value={String(b.id)}>
+                        {b.jenis_bencana} — {b.lokasi} ({new Date(b.tanggal).toLocaleDateString('id-ID')})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                {errors.jenisBencana && <p className="mt-1 text-xs text-destructive">{errors.jenisBencana.message}</p>}
-              </div>
-              <div>
-                <Label>Tanggal Kejadian *</Label>
-                <Input type="date" {...register('tanggalKejadian')} />
-                {errors.tanggalKejadian && <p className="mt-1 text-xs text-destructive">{errors.tanggalKejadian.message}</p>}
-              </div>
-              <div>
-                <Label>Jumlah Korban</Label>
-                <Input type="number" {...register('jumlahKorban')} placeholder="0" />
-              </div>
-              <div>
-                <Label>Jumlah Pengungsi</Label>
-                <Input type="number" {...register('jumlahPengungsi')} placeholder="0" />
+                {errors.bencana_id && <p className="mt-1 text-xs text-destructive">{errors.bencana_id.message}</p>}
               </div>
             </div>
 
@@ -101,7 +107,7 @@ const PermintaanPage = () => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label>Barang yang Diminta *</Label>
-                <Button type="button" variant="outline" size="sm" onClick={() => append({ barang: '', jumlah: 0 })}>
+                <Button type="button" variant="outline" size="sm" onClick={() => append({ barang_id: '', jumlah: 0 })}>
                   <Plus className="mr-1 h-3 w-3" />Tambah
                 </Button>
               </div>
@@ -112,8 +118,17 @@ const PermintaanPage = () => {
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex gap-2 items-start">
                     <div className="flex-1">
-                      <Input {...register(`items.${index}.barang`)} placeholder="Nama barang" />
-                      {errors.items?.[index]?.barang && <p className="mt-1 text-xs text-destructive">{errors.items[index]?.barang?.message}</p>}
+                      <Select onValueChange={v => setValue(`items.${index}.barang_id`, v)}>
+                        <SelectTrigger><SelectValue placeholder="Pilih barang" /></SelectTrigger>
+                        <SelectContent>
+                          {barangOptions.map((b: any) => (
+                            <SelectItem key={b.id} value={String(b.id)}>
+                              {b.nama_barang} ({b.satuan?.nama_satuan})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.items?.[index]?.barang_id && <p className="mt-1 text-xs text-destructive">{errors.items[index]?.barang_id?.message}</p>}
                     </div>
                     <div className="w-28">
                       <Input type="number" {...register(`items.${index}.jumlah`)} placeholder="Jumlah" />
@@ -142,30 +157,34 @@ const PermintaanPage = () => {
           <h3 className="text-sm font-semibold text-foreground">Daftar Permintaan</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">No. Permintaan</th>
-                <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Lokasi</th>
-                <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Jenis Bencana</th>
-                <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Tanggal</th>
-                <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Item</th>
-                <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {permintaanData.map(p => (
-                <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                  <td className="whitespace-nowrap px-4 py-3 font-medium text-foreground">{p.nomorPermintaan}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{p.lokasiBencana}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{p.jenisBencana}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{p.tanggalKejadian}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.items.map(i => `${i.barang} (${i.jumlah})`).join(', ')}</td>
-                  <td className="whitespace-nowrap px-4 py-3"><StatusBadge status={p.status} /></td>
+          {loading ? (
+            <div className="px-4 py-8 text-center text-muted-foreground">Memuat data...</div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Lokasi Bencana</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Jenis Bencana</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Tanggal</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Item</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.map((p: any) => (
+                  <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                    <td className="whitespace-nowrap px-4 py-3 font-medium text-foreground">REQ-{String(p.id).padStart(3, '0')}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{p.bencana?.lokasi}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{p.bencana?.jenis_bencana}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{new Date(p.tanggal).toLocaleDateString('id-ID')}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{p.detail?.map((i: any) => `${i.barang?.nama_barang} (${i.jumlah})`).join(', ')}</td>
+                    <td className="whitespace-nowrap px-4 py-3"><StatusBadge status={p.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

@@ -38,6 +38,9 @@ model User {
   role     Role      @relation(fields: [role_id], references: [id])
   instansi Instansi? @relation(fields: [instansi_id], references: [id])
 
+  permintaan  PermintaanLogistik[]
+  distribusi  Distribusi[]
+
   @@index([email])
   @@map("users")
 }
@@ -68,6 +71,8 @@ model Gudang {
   instansi Instansi @relation(fields: [instansi_id], references: [id])
 
   stok_logistik StokLogistik[]
+  barang_masuk  BarangMasuk[]
+  distribusi    Distribusi[]
 
   @@map("gudang")
 }
@@ -108,7 +113,10 @@ model BarangLogistik {
   jenis_logistik JenisLogistik @relation(fields: [jenis_logistik_id], references: [id])
   satuan         Satuan        @relation(fields: [satuan_id], references: [id])
 
-  stok_logistik StokLogistik[]
+  stok_logistik      StokLogistik[]
+  barang_masuk       BarangMasuk[]
+  permintaan_detail  PermintaanDetail[]
+  distribusi_detail  DistribusiDetail[]
 
   @@map("barang_logistik")
 }
@@ -132,6 +140,27 @@ model StokLogistik {
   @@map("stok_logistik")
 }
 
+// ─── BARANG MASUK ───────────────────────────────────────────────────────────────
+model BarangMasuk {
+  id              Int       @id @default(autoincrement())
+  tanggal_masuk   DateTime
+  barang_id       Int
+  jumlah          Int
+  gudang_id       Int
+  sumber_logistik String
+  supplier        String
+  catatan         String?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  barang BarangLogistik @relation(fields: [barang_id], references: [id])
+  gudang Gudang         @relation(fields: [gudang_id], references: [id])
+
+  @@index([barang_id])
+  @@index([gudang_id])
+  @@map("barang_masuk")
+}
+
 // ─── KENDARAAN ──────────────────────────────────────────────────────────────────
 model Kendaraan {
   id              Int      @id @default(autoincrement())
@@ -141,5 +170,116 @@ model Kendaraan {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
+  distribusi Distribusi[]
+
   @@map("kendaraan")
+}
+
+// ─── BENCANA ────────────────────────────────────────────────────────────────────
+model Bencana {
+  id               Int      @id @default(autoincrement())
+  jenis_bencana    String
+  lokasi           String
+  latitude         Float?
+  longitude        Float?
+  tanggal          DateTime
+  jumlah_pengungsi Int      @default(0)
+  jumlah_korban    Int      @default(0)
+  status           String   @default("Tanggap Darurat")
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  permintaan PermintaanLogistik[]
+
+  @@index([tanggal])
+  @@map("bencana")
+}
+
+// ─── PERMINTAAN LOGISTIK ────────────────────────────────────────────────────────
+model PermintaanLogistik {
+  id          Int      @id @default(autoincrement())
+  bencana_id  Int
+  pemohon_id  Int
+  status      String   @default("pending")
+  tanggal     DateTime
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  bencana    Bencana  @relation(fields: [bencana_id], references: [id])
+  pemohon    User     @relation(fields: [pemohon_id], references: [id])
+  detail     PermintaanDetail[]
+  distribusi Distribusi[]
+
+  @@index([status])
+  @@map("permintaan_logistik")
+}
+
+// ─── PERMINTAAN DETAIL ──────────────────────────────────────────────────────────
+model PermintaanDetail {
+  id             Int      @id @default(autoincrement())
+  permintaan_id  Int
+  barang_id      Int
+  jumlah         Int
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  permintaan PermintaanLogistik @relation(fields: [permintaan_id], references: [id], onDelete: Cascade)
+  barang     BarangLogistik     @relation(fields: [barang_id], references: [id])
+
+  @@map("permintaan_detail")
+}
+
+// ─── DISTRIBUSI ─────────────────────────────────────────────────────────────────
+model Distribusi {
+  id             Int      @id @default(autoincrement())
+  permintaan_id  Int
+  gudang_id      Int
+  tanggal_kirim  DateTime
+  kendaraan_id   Int
+  petugas_id     Int
+  status         String   @default("pending")
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  permintaan PermintaanLogistik @relation(fields: [permintaan_id], references: [id])
+  gudang     Gudang             @relation(fields: [gudang_id], references: [id])
+  kendaraan  Kendaraan          @relation(fields: [kendaraan_id], references: [id])
+  petugas    User               @relation(fields: [petugas_id], references: [id])
+  detail     DistribusiDetail[]
+  penerimaan PenerimaanLogistik[]
+
+  @@map("distribusi")
+}
+
+// ─── DISTRIBUSI DETAIL ──────────────────────────────────────────────────────────
+model DistribusiDetail {
+  id            Int      @id @default(autoincrement())
+  distribusi_id Int
+  barang_id     Int
+  jumlah        Int
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  distribusi Distribusi     @relation(fields: [distribusi_id], references: [id], onDelete: Cascade)
+  barang     BarangLogistik @relation(fields: [barang_id], references: [id])
+
+  @@map("distribusi_detail")
+}
+
+// ─── PENERIMAAN LOGISTIK ────────────────────────────────────────────────────────
+model PenerimaanLogistik {
+  id              Int      @id @default(autoincrement())
+  distribusi_id   Int
+  tanggal_terima  DateTime @default(now())
+  petugas_posko   String
+  catatan         String?
+  dokumentasi     String?
+  latitude        Float?
+  longitude       Float?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  distribusi Distribusi @relation(fields: [distribusi_id], references: [id])
+
+  @@map("penerimaan_logistik")
 }

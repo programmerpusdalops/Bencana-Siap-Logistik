@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
 import { TopNavbar } from './TopNavbar';
 import { Menu } from 'lucide-react';
+
+const ContentLoading = () => (
+  <div className="flex flex-1 items-center justify-center py-20">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+  </div>
+);
 
 export const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,7 +30,9 @@ export const MainLayout = () => {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopNavbar onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-          <Outlet />
+          <Suspense fallback={<ContentLoading />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
 
